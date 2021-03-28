@@ -40,12 +40,19 @@ on_heroku = True if os.environ.get('on_heroku') == 'True' else False
 
 def upload():
     upload_file = data_file if on_heroku else 'data-local.csv'
+    upload_log_file = log_file if on_heroku else log_file.split('.')[0] + '-local.log'
     try:
         with open(data_file, 'rb') as f:
             s3.upload_fileobj(f, bucket, upload_file)
         logger.info(f'Uploaded {upload_file} to S3 bucket {bucket}')
     except:
         logger.exception(f'Upload of {upload_file} to S3 bucket {bucket} failed')
+    try:
+        with open(log_file, 'rb') as f:
+            s3.upload_fileobj(f, bucket, upload_log_file)
+        logger.info(f'Uploaded {upload_log_file} to S3 bucket {bucket}')
+    except:
+        logger.exception(f'Upload of {upload_log_file} to S3 bucket {bucket} failed')
 
 def watch():
     try:
@@ -90,5 +97,6 @@ def watch():
         logger.exception('ERROR')
 
 if __name__ == '__main__':
-    watch()
+    #watch()
+    upload()
 
