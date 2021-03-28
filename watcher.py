@@ -29,10 +29,10 @@ printer.setLevel(logging.DEBUG)
 printer.setFormatter(formatter)
 logger.addHandler(printer)
 
-logger.info('**** STARTING PROGRAM ****')
-logger.info(f'Program settings: time_delay: {time_delay}, data_file: {data_file}, num_items: {num_items}, log_file: {log_file}')
-
-def main():
+def watch():
+    logger.info('**** STARTING WATCHER ****')
+    logger.info(
+        f'Program settings: time_delay: {time_delay}, data_file: {data_file}, num_items: {num_items}, log_file: {log_file}')
     if not os.path.isfile(data_file):
         with open(data_file, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
@@ -66,7 +66,7 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        watch()
     except:
         logger.exception('ERROR')
 

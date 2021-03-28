@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wegobuy Watcher</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+
+<body>
+    <button onclick="location.href='/getcsv';">Download CSV</button>
+    <br>
+    <table class="table table-striped table-bordered table-hover table-sm">
+        <thead>
+        <tr>
+            {% for h in header %}
+            <th>{{ h }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in data %}
+        <tr>
+            {% for k in d %}
+
+            {% if k == 'goodsPicUrl' %}
+            <td>{{ d[k] }}<img src="{{ d[k] }}" width="200" height="200"></td>
+            {% elif k == 'statePicUrl' %}
+            <td><img src="{{ d[k] }}"></td>
+            {% else %}
+            <td>{{ d[k] }}</td>
+            {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
