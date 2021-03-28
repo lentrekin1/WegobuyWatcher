@@ -1,7 +1,11 @@
 from flask import Flask, render_template, Response
 import csv
 import os
+import threading
 import watcher
+
+watch_thread = threading.Thread(target=watcher.watch, args=())
+watch_thread.start()
 
 app = Flask(__name__)
 
