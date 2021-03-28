@@ -123,14 +123,22 @@ def watch():
         logger.info('Starting main loop...')
         while True:
             response = requests.get(url + str(num_items))
+            logger.info('raw response ______________________________________________')
+            logger.info(response)
             response = json.loads(response.text.encode('utf-8'))
+            logger.info('json respone _____________________________')
+            logger.info(response)
             curr_data = response['data']
+            logger.info('response[data]_____________________________')
+            logger.info(curr_data)
             curr_data = [{k: str(v) for k, v in c.items()} for c in curr_data]
             for c in list(curr_data):
                 if c['id'] in old_ids:
                     curr_data.remove(c)
                 else:
                     old_ids.append(c['id'])
+            logger.info('post remove dups ____________________________________')
+            logger.info(curr_data)
             if len(curr_data) > 0:
                 with open(data_file, 'a', newline='', encoding='utf-8') as f:
                     writer = csv.DictWriter(f, row_names)
