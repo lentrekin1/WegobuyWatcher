@@ -126,14 +126,14 @@ def watch():
         logger.info('Starting main loop...')
         while True:
             response = requests.get(url + str(num_items))
-            logger.info('raw response ______________________________________________')
-            logger.info(response)
+            #logger.info('raw response ______________________________________________')
+            #logger.info(response)
             response = json.loads(response.text.encode('utf-8'))
-            logger.info('json respone _____________________________')
-            logger.info(response)
+            #logger.info('json respone _____________________________')
+            #logger.info(response)
             curr_data = response['data']
-            logger.info('response[data]_____________________________')
-            logger.info(curr_data)
+            #logger.info('response[data]_____________________________')
+            #logger.info(curr_data)
             curr_data = [{k: str(v) for k, v in c.items()} for c in curr_data]
 
             for c in list(curr_data):
@@ -143,8 +143,8 @@ def watch():
                     old_ids.append(c['id'])
                     old_times.append(c['goodsOrderTime'])
 
-            logger.info('post remove dups ____________________________________')
-            logger.info(curr_data)
+            #logger.info('post remove dups ____________________________________')
+            #logger.info(curr_data)
             if len(curr_data) > 0:
                 with open(data_file, 'a', newline='', encoding='utf-8') as f:
                     writer = csv.DictWriter(f, row_names)
