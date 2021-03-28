@@ -41,6 +41,9 @@ tmp_csv_name = 'tmp_csv'
 
 on_heroku = True if os.environ.get('on_heroku') == 'True' else False
 
+def log_cron():
+    logger.info('Request recieved from cron-job.org')
+
 def upload():
     upload_file = data_file if on_heroku else 'data-local.csv'
     upload_log_file = log_file if on_heroku else log_file.split('.')[0] + '-local.log'

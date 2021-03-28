@@ -43,5 +43,10 @@ def give_data():
         headers={"Content-disposition":
                      f"attachment; filename={watcher.data_file}"})
 
+@app.route('/cron')
+def cron_job():
+    watcher.log_cron()
+    return 'Wegobuy-Watcher'
+
 if __name__ == '__main__':
     app.run(port=80)
