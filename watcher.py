@@ -89,6 +89,7 @@ def watch():
         logger.info(
             f'Program settings: time_delay: {time_delay}, data_file: {data_file}, num_items: {num_items}, log_file: {log_file}')
         old_ids = []
+        old_times = []
         old_exists = download()
         if not os.path.isfile(data_file):
             with open(data_file, 'w', newline='', encoding='utf-8') as f:
@@ -100,7 +101,8 @@ def watch():
             reader = csv.DictReader(f)
             for row in reader:
                 old_ids.append(row['id'])
-            logger.info(f'Read {len(old_ids)} ids from {data_file}')
+                old_times.append(row['goodsOrderTime'])
+            logger.info(f'Read {len(old_ids)} ids and {len(old_times)} order times from {data_file}')
 #todo fix error where, when deployed on heroku, watch() starts twice, idk y
 #todo heroku deployment appears to not be working correctly
         if old_exists:
@@ -112,9 +114,10 @@ def watch():
                     num_old = 0
                     for row in reader:
                         num_old += 1
-                        if row['id'] not in old_ids:
+                        if row['id'] not in old_ids and row['goodsOrderTime'] not in old_times:
                             writer.writerow(row)
                             old_ids.append(row['id'])
+                            old_times.append(row['goodsOrderTime'])
                             num_added += 1
             logger.info(f'Read {num_old} entries from old data {tmp_csv_name} and added {num_added} entries to {data_file}')
             os.remove(tmp_csv_name)
@@ -132,11 +135,14 @@ def watch():
             logger.info('response[data]_____________________________')
             logger.info(curr_data)
             curr_data = [{k: str(v) for k, v in c.items()} for c in curr_data]
+
             for c in list(curr_data):
-                if c['id'] in old_ids:
+                if c['id'] in old_ids and c['goodsOrderTime'] in old_times:
                     curr_data.remove(c)
                 else:
                     old_ids.append(c['id'])
+                    old_times.append(c['goodsOrderTime'])
+
             logger.info('post remove dups ____________________________________')
             logger.info(curr_data)
             if len(curr_data) > 0:
