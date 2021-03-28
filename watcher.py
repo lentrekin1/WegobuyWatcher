@@ -6,6 +6,7 @@ import time
 import logging
 import sys
 import boto3
+import functools
 from botocore.exceptions import ClientError
 from datetime import datetime
 
@@ -67,7 +68,18 @@ def download():
     except:
         logger.exception(f'Error downloading file {data_file if on_heroku else "data-local.csv"} from S3 bucket {bucket}')
 
+def trackcalls(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        wrapper.has_been_called = False
+        return func(*args, **kwargs)
+    wrapper.has_been_called = False
+    return wrapper
+
+#@trackcalls
 def watch():
+    #if not watch.has_been_called:
+    watch.has_been_called = True
     try:
         last_upload = time.time()
         logger.info('**** STARTING WATCHER ****')
@@ -86,7 +98,8 @@ def watch():
             for row in reader:
                 old_ids.append(row['id'])
             logger.info(f'Read {len(old_ids)} ids from {data_file}')
-
+#todo fix error where, when deployed on heroku, watch() starts twice, idk y
+#todo heroku deployment appears to not be working correctly
         if old_exists:
             with open(tmp_csv_name, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
@@ -101,6 +114,8 @@ def watch():
                             old_ids.append(row['id'])
                             num_added += 1
             logger.info(f'Read {num_old} entries from old data {tmp_csv_name} and added {num_added} entries to {data_file}')
+            os.remove(tmp_csv_name)
+            logger.info(f'Deleted temporary file {tmp_csv_name}')
 
         logger.info('Starting main loop...')
         while True:
@@ -126,6 +141,8 @@ def watch():
             time.sleep(time_delay)
     except:
         logger.exception('ERROR')
+    #else:
+    #    print('already called')
 
 if __name__ == '__main__':
     watch()
