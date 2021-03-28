@@ -19,7 +19,7 @@ def get_data():
         reader = csv.DictReader(f)
         for row in reader:
             data.append(row)
-    return data
+    return list(reversed(data))
 
 @app.route('/')
 def show_data():

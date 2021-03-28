@@ -7,7 +7,7 @@ import logging
 import sys
 from datetime import datetime
 
-time_delay = 2
+time_delay = 5
 data_file = 'data.csv'
 url = 'https://front.wegobuy.com/shoppingguide/sale-daily-new?count='
 num_items = 15
@@ -59,7 +59,7 @@ def watch():
             with open(data_file, 'a', newline='', encoding='utf-8') as f:
                 writer = csv.DictWriter(f, row_names)
                 writer.writerows(curr_data)
-                logger.info(f'Wrote the following to {data_file}: {curr_data}')
+                logger.info(f'Wrote {len(curr_data)} new items to {data_file}: {curr_data}')
         else:
             logger.info('No new items found')
         time.sleep(time_delay)
