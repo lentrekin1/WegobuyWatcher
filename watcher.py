@@ -136,8 +136,8 @@ def watch():
                     writer = csv.DictWriter(f, row_names)
                     writer.writerows(curr_data)
                     logger.info(f'Wrote {len(curr_data)} new items to {data_file}: {curr_data}')
-            #else:
-                #logger.info('No new items found')
+            else:
+                logger.info('No new items found')
             if time.time() - last_upload > upload_time:
                 upload()
                 last_upload = time.time()
