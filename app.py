@@ -4,7 +4,8 @@ import os
 import threading
 import watcher
 
-watch_thread = None
+watch_thread = threading.Thread(target=watcher.watch, args=())
+watch_thread.start()
 app = Flask(__name__)
 
 def get_data():
@@ -18,16 +19,6 @@ def get_data():
         for row in reader:
             data.append(row)
     return list(reversed(data))
-
-@app.before_first_request
-def start_watcher():
-    global watch_thread
-    if not isinstance(watch_thread, threading.Thread):
-        watch_thread = threading.Thread(target=watcher.watch, args=())
-        watch_thread.start()
-
-watch_thread = threading.Thread(target=watcher.watch, args=())
-watch_thread.start()
 
 @app.route('/')
 def show_data():
