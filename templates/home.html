@@ -24,13 +24,13 @@
             {% for k in d %}
 
             {% if k == 'goodsPicUrl' %}
-            <td><img src="{{ d[k] }}" width="200" height="200"></td>
-            {% elif k == 'statePicUrl' %}
-            <td><img src="{{ d[k] }}"></td>
+            <td><img src="{{ d[k] }}" style="max-width:200px;max-height:200px;"></td>
+            {% elif k == 'statePicUrl' or k == 'buyerAvatar' %}
+            <td><img src="{{ d[k] }}" style="max-width:50px;max-height:50px;"></td>
             {% elif d[k].startswith('https://') %}
-            <td><a href="{{ d[k] }}" target="_blank">{{ d[k] }}</a> </td>
+            <td style="max-width: 150px;word-wrap: break-word;"><a href="{{ d[k] }}" target="_blank">{{ d[k] }}</a> </td>
             {% else %}
-            <td>{{ d[k] }}</td>
+            <td style="width: 150px;">{{ d[k] }}</td>
             {% endif %}
             {% endfor %}
         </tr>
