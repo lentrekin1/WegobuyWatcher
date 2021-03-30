@@ -4,11 +4,21 @@
     <meta charset="UTF-8">
     <title>Wegobuy Watcher</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script>
+        function nextPage() {
+            location.href = "/page/" + (parseInt(location.href.split('/')[4]) + 1);
+        }
+        function lastPage() {
+            location.href = "/page/" + (parseInt(location.href.split('/')[4]) - 1);
+        }
+    </script>
 </head>
 
 <body>
     <button onclick="location.href='/getcsv';">Download CSV</button>
-    <strong>Total number of items: {{ data|length }}</strong>
+    <strong>Total number of items: {{ totalNum }}</strong>
+    <button onclick="lastPage()" style="display:{{ isFirst }};">Last Page</button>
+    <button onclick="nextPage()" style="display:{{ isLast }};">Next Page</button>
     <br>
     <table class="table table-striped table-bordered table-hover table-sm">
         <thead>
