@@ -64,9 +64,6 @@ def download():
     except:
         logger.exception(f'Error downloading file {data_file if on_heroku else "data-local.csv"} from S3 bucket {bucket}')
 
-def log_cron():
-    logger.info('Request received from cron-job.org')
-
 def log_subprocess_output(pipe):
     for line in iter(pipe.readline, b''):
         logger.info('Notebook conversion output: %r', line.decode().strip())
