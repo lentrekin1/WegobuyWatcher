@@ -9,6 +9,7 @@ import boto3
 import pandas as pd
 from botocore.exceptions import ClientError
 from datetime import datetime
+import subprocess
 
 time_delay = 5
 data_file = 'data.csv'
@@ -16,6 +17,9 @@ url = 'https://front.wegobuy.com/shoppingguide/sale-daily-new?count='
 num_items = 15
 row_names = ['id', 'goodsId', 'goodsPicUrl', 'goodsTitle', 'goodsLink', 'goodsPrice', 'buyerId', 'buyerName', 'orderState', 'goodsOrderTime', 'status', 'createTime', 'updateTime', 'buyerAvatar', 'userLevel', 'userLevelType', 'currencySymbol', 'userName', 'timeName', 'countryCode', 'statePicUrl']
 check_cols = ['goodsId', 'buyerId', 'goodsOrderTime']
+
+notebook_name = 'notebook'
+notebook_load_wait = 60 * 60
 
 if not os.path.isdir('logs'):
     os.mkdir('logs')
@@ -72,12 +76,29 @@ def download():
 def log_cron():
     logger.info('Request recieved from cron-job.org')
 
+def log_subprocess_output(pipe):
+    for line in iter(pipe.readline, b''):
+        logger.info('Notebook conversion output: %r', line.decode().strip())
+
+def load_notebook():
+    logger.info(f'Converting {notebook_name}.ipynb to {notebook_name}.html')
+    converter = subprocess.Popen(['jupyter', 'nbconvert', '--execute', '--no-input', '--no-prompt', '--output-dir="./templates"', '--to', 'html', notebook_name + '.ipynb'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    with converter.stdout:
+        log_subprocess_output(converter.stdout)
+    exitcode = converter.wait()
+    logger.info(f'Notebook conversion finished with exitcode {exitcode}')
+    return exitcode
+
 def watch():
     try:
         last_upload = time.time()
         logger.info('**** STARTING WATCHER ****')
         logger.info(
             f'Program settings: time_delay: {time_delay}, data_file: {data_file}, num_items: {num_items}, log_file: {log_file}')
+
+        load_notebook()
+        last_conversion = time.time()
+
         old_exists = download()
         if not os.path.isfile(data_file):
             with open(data_file, 'w', newline='', encoding='utf-8') as f:
@@ -116,10 +137,15 @@ def watch():
             if time.time() - last_upload > upload_time:
                 upload()
                 last_upload = time.time()
+
+            if time.time() - last_conversion > notebook_load_wait:
+                load_notebook()
+                last_conversion = time.time()
+
             time.sleep(time_delay)
     except:
         logger.exception('ERROR')
 
 if __name__ == '__main__':
-    watch()
-
+    #watch()
+    load_notebook()

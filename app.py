@@ -40,6 +40,13 @@ def page(pg):
         return redirect('/page/' + str(1))
     return render_template('home.html', data=get_data(pg=int(pg)), isFirst='' if pg != 1 else 'none', isLast='' if pg != last_pg else 'none', totalNum=len(get_data()), header=watcher.row_names)
 
+@app.route('/info')
+def info():
+    if os.path.isfile('templates/' + watcher.notebook_name + '.html'):
+        return render_template(watcher.notebook_name + '.html')
+    else:
+        return 'Analysis file not found'
+
 @app.route("/getcsv")
 def give_data():
     with open(watcher.data_file, encoding='utf-8') as f:
