@@ -1,24 +1,26 @@
-import requests
-import json
 import csv
-import os
-import time
+import json
 import logging
-import sys
+import os
+import subprocess
+import time
+from datetime import datetime
+
 import boto3
 import pandas as pd
+import requests
 from botocore.exceptions import ClientError
-from datetime import datetime
-import subprocess
 
 logger = logging.getLogger(__name__)
 log_file = 'logs/{:%Y_%m_%d_%H}.log'.format(datetime.now())
 
-time_delay = 5
+time_delay = 2
 data_file = 'data.csv'
 url = 'https://front.wegobuy.com/shoppingguide/sale-daily-new?count='
 num_items = 15
-row_names = ['id', 'goodsId', 'goodsPicUrl', 'goodsTitle', 'goodsLink', 'goodsPrice', 'buyerId', 'buyerName', 'orderState', 'goodsOrderTime', 'status', 'createTime', 'updateTime', 'buyerAvatar', 'userLevel', 'userLevelType', 'currencySymbol', 'userName', 'timeName', 'countryCode', 'statePicUrl']
+row_names = ['id', 'goodsId', 'goodsPicUrl', 'goodsTitle', 'goodsLink', 'goodsPrice', 'buyerId', 'buyerName',
+             'orderState', 'goodsOrderTime', 'status', 'createTime', 'updateTime', 'buyerAvatar', 'userLevel',
+             'userLevelType', 'currencySymbol', 'userName', 'timeName', 'countryCode', 'statePicUrl']
 check_cols = ['goodsId', 'buyerId', 'goodsOrderTime']
 
 notebook_name = 'notebook'
@@ -36,6 +38,7 @@ tmp_csv_name = 'tmp_csv'
 
 on_heroku = True if os.environ.get('on_heroku') == 'True' else False
 
+
 def upload():
     upload_file = data_file if on_heroku else 'data-local.csv'
     upload_log_file = log_file if on_heroku else log_file.split('.')[0] + '-local.log'
@@ -52,30 +55,38 @@ def upload():
     except:
         logger.exception(f'Upload of {upload_log_file} to S3 bucket {bucket} failed')
 
+
 def download():
     logger.info(f'Attempting to download {data_file if on_heroku else "data-local.csv"} from bucket {bucket}')
     try:
         with open(tmp_csv_name, 'wb') as f:
             s3.download_fileobj(bucket, data_file if on_heroku else 'data-local.csv', f)
-        logger.info(f'Downloaded {data_file if on_heroku else "data-local.csv"} from S3 bucket {bucket} to file {tmp_csv_name}')
+        logger.info(
+            f'Downloaded {data_file if on_heroku else "data-local.csv"} from S3 bucket {bucket} to file {tmp_csv_name}')
         return True
     except ClientError:
         logger.info(f'File {data_file if on_heroku else "data-local.csv"} not found on S3 bucket {bucket}')
     except:
-        logger.exception(f'Error downloading file {data_file if on_heroku else "data-local.csv"} from S3 bucket {bucket}')
+        logger.exception(
+            f'Error downloading file {data_file if on_heroku else "data-local.csv"} from S3 bucket {bucket}')
+
 
 def log_subprocess_output(pipe):
     for line in iter(pipe.readline, b''):
         logger.info('Notebook conversion output: %r', line.decode().strip())
 
+
 def load_notebook():
     logger.info(f'Converting {notebook_name}.ipynb to {notebook_name}.html')
-    converter = subprocess.Popen(['jupyter', 'nbconvert', '--execute', '--no-input', '--no-prompt', '--output-dir="./templates"', '--to', 'html', notebook_name + '.ipynb'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    converter = subprocess.Popen(
+        ['jupyter', 'nbconvert', '--execute', '--no-input', '--no-prompt', '--output-dir="./templates"', '--to', 'html',
+         notebook_name + '.ipynb'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     with converter.stdout:
         log_subprocess_output(converter.stdout)
     exitcode = converter.wait()
     logger.info(f'Notebook conversion finished with exitcode {exitcode}')
     return exitcode
+
 
 def watch():
     try:
@@ -99,7 +110,8 @@ def watch():
             df = df.drop_duplicates(subset=check_cols)
             df = df.reset_index(drop=True)
             df.to_csv(data_file, encoding='utf-8', index=False)
-            logger.info(f'Read {len(download_df)} entries from old data {tmp_csv_name} and added {len(df) - len(old_df)} entries to {data_file}')
+            logger.info(
+                f'Read {len(download_df)} entries from old data {tmp_csv_name} and added {len(df) - len(old_df)} entries to {data_file}')
             os.remove(tmp_csv_name)
             logger.info(f'Deleted temporary file {tmp_csv_name}')
 
@@ -120,8 +132,6 @@ def watch():
             if len(df) - len(old_df) > 0:
                 df.to_csv(data_file, encoding='utf-8', index=False)
                 logger.info(f'Wrote {len(df) - len(old_df)} new items to {data_file}')
-            #else:
-                #logger.info('No new items found')
             if time.time() - last_upload > upload_time:
                 upload()
                 last_upload = time.time()
@@ -133,6 +143,7 @@ def watch():
             time.sleep(time_delay)
     except:
         logger.exception('ERROR')
+
 
 if __name__ == '__main__':
     watch()
