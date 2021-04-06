@@ -31,7 +31,7 @@ bucket = os.environ.get('S3_BUCKET_NAME')
 key = os.environ.get('AWS_ACCESS_KEY_ID')
 secret = os.environ.get('AWS_SECRET_ACCESS_KEY')
 s3 = boto3.client('s3')
-upload_time = 10 * 60
+upload_time = 60 * 60
 tmp_csv_name = 'tmp_csv'
 
 on_heroku = True if os.environ.get('on_heroku') == 'True' else False
