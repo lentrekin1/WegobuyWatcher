@@ -12,7 +12,7 @@ from datetime import datetime
 import subprocess
 
 logger = logging.getLogger(__name__)
-log_file = 'logs\{:%Y_%m_%d_%H}.log'.format(datetime.now())
+log_file = 'logs/{:%Y_%m_%d_%H}.log'.format(datetime.now())
 
 time_delay = 5
 data_file = 'data.csv'
@@ -53,7 +53,6 @@ def upload():
         logger.exception(f'Upload of {upload_log_file} to S3 bucket {bucket} failed')
 
 def download():
-
     logger.info(f'Attempting to download {data_file if on_heroku else "data-local.csv"} from bucket {bucket}')
     try:
         with open(tmp_csv_name, 'wb') as f:
