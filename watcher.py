@@ -95,10 +95,6 @@ def watch():
         logger.info('**** STARTING WATCHER ****')
         logger.info(
             f'Program settings: time_delay: {time_delay}, data_file: {data_file}, num_items: {num_items}, log_file: {log_file}')
-
-        load_notebook()
-        last_conversion = time.time()
-
         old_exists = download()
         if not os.path.isfile(data_file):
             with open(data_file, 'w', newline='', encoding='utf-8') as f:
@@ -117,6 +113,9 @@ def watch():
             logger.info(f'Read {len(download_df)} entries from old data {tmp_csv_name} and added {len(df) - len(old_df)} entries to {data_file}')
             os.remove(tmp_csv_name)
             logger.info(f'Deleted temporary file {tmp_csv_name}')
+
+        load_notebook()
+        last_conversion = time.time()
 
         logger.info('Starting main loop...')
         while True:
