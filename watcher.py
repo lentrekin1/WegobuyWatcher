@@ -11,6 +11,9 @@ from botocore.exceptions import ClientError
 from datetime import datetime
 import subprocess
 
+logger = logging.getLogger(__name__)
+log_file = 'logs\{:%Y_%m_%d_%H}.log'.format(datetime.now())
+
 time_delay = 5
 data_file = 'data.csv'
 url = 'https://front.wegobuy.com/shoppingguide/sale-daily-new?count='
@@ -24,19 +27,6 @@ notebook_load_wait = 60 * 60
 if not os.path.isdir('logs'):
     os.mkdir('logs')
 
-log_file = 'logs\{:%Y_%m_%d_%H}.log'.format(datetime.now())
-log_format = u'%(asctime)s | %(levelname)-8s | %(message)s'
-logger = logging.getLogger('WegobuyWatcher')
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(log_file, encoding='utf-8')
-formatter = logging.Formatter(log_format)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-printer = logging.StreamHandler(sys.stdout)
-printer.setLevel(logging.DEBUG)
-printer.setFormatter(formatter)
-logger.addHandler(printer)
-
 bucket = os.environ.get('S3_BUCKET_NAME')
 key = os.environ.get('AWS_ACCESS_KEY_ID')
 secret = os.environ.get('AWS_SECRET_ACCESS_KEY')
@@ -44,7 +34,7 @@ s3 = boto3.client('s3')
 upload_time = 10 * 60
 tmp_csv_name = 'tmp_csv'
 
-on_heroku = True #if os.environ.get('on_heroku') == 'True' else False
+on_heroku = True if os.environ.get('on_heroku') == 'True' else False
 
 def upload():
     upload_file = data_file if on_heroku else 'data-local.csv'
@@ -76,7 +66,7 @@ def download():
         logger.exception(f'Error downloading file {data_file if on_heroku else "data-local.csv"} from S3 bucket {bucket}')
 
 def log_cron():
-    logger.info('Request recieved from cron-job.org')
+    logger.info('Request received from cron-job.org')
 
 def log_subprocess_output(pipe):
     for line in iter(pipe.readline, b''):
@@ -84,13 +74,12 @@ def log_subprocess_output(pipe):
 
 def load_notebook():
     logger.info(f'Converting {notebook_name}.ipynb to {notebook_name}.html')
-    converter = subprocess.Popen(['jupyter', 'nbconvert', '--execute', '--no-input', '--no-prompt', '--output-dir="./templates"', '--to', 'html', notebook_name + '.ipynb'])#, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    converter.communicate()
-    #with converter.stdout:
-    #    log_subprocess_output(converter.stdout)
-    #exitcode = converter.wait()
-    #logger.info(f'Notebook conversion finished with exitcode {exitcode}')
-    #return exitcode
+    converter = subprocess.Popen(['jupyter', 'nbconvert', '--execute', '--no-input', '--no-prompt', '--output-dir="./templates"', '--to', 'html', notebook_name + '.ipynb'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    with converter.stdout:
+        log_subprocess_output(converter.stdout)
+    exitcode = converter.wait()
+    logger.info(f'Notebook conversion finished with exitcode {exitcode}')
+    return exitcode
 
 def watch():
     try:
@@ -103,7 +92,7 @@ def watch():
             with open(data_file, 'w', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
                 writer.writerow(row_names)
-                logger.info(f'Data file {data_file} not found, created it with row names {row_names}')
+                logger.info(f'Data file {data_file} not found, created it with default row names')
         df = pd.read_csv(data_file, encoding='utf-8')
         logger.info(f'Read {len(df)} entries from {data_file}')
 
@@ -134,7 +123,7 @@ def watch():
             df = df.reset_index(drop=True)
             if len(df) - len(old_df) > 0:
                 df.to_csv(data_file, encoding='utf-8', index=False)
-                logger.info(f'Wrote {len(df) - len(old_df)} new items to {data_file}: {curr_data}')
+                logger.info(f'Wrote {len(df) - len(old_df)} new items to {data_file}')
             #else:
                 #logger.info('No new items found')
             if time.time() - last_upload > upload_time:

@@ -1,8 +1,26 @@
-from flask import Flask, render_template, Response, redirect
+from flask import Flask, render_template, Response, redirect, request
 import csv
 import os
 import threading
 import watcher
+import logging
+import sys
+from datetime import datetime
+
+log_file = 'logs\{:%Y_%m_%d_%H}.log'.format(datetime.now())
+log_format = u'%(asctime)s | %(levelname)-8s | %(message)s'
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+handler = logging.FileHandler(log_file, encoding='utf-8')
+formatter = logging.Formatter(log_format)
+handler.setFormatter(formatter)
+root_logger.addHandler(handler)
+printer = logging.StreamHandler(sys.stdout)
+printer.setLevel(logging.DEBUG)
+printer.setFormatter(formatter)
+root_logger.addHandler(printer)
+
+logger = logging.getLogger(__name__)
 
 page_len = 100
 watch_thread = threading.Thread(target=watcher.watch, args=())
@@ -27,6 +45,10 @@ def get_last_page():
     data = get_data()
     return int(len(data) / page_len) + 1
 
+@app.before_request
+def log_connection():
+    logger.info(f'IP address {request.remote_addr} is connecting to page "{request.path}"')
+
 @app.route('/')
 def show_data():
     return redirect('/page/' + str(get_last_page()))
@@ -45,12 +67,14 @@ def info():
     if os.path.isfile('templates/' + watcher.notebook_name + '.html'):
         return render_template(watcher.notebook_name + '.html')
     else:
+        logger.info(f'Analysis file {watcher.notebook_name}.html was request by {request.remote_addr} and was not found')
         return 'Analysis file not found'
 
 @app.route("/getcsv")
 def give_data():
     with open(watcher.data_file, encoding='utf-8') as f:
         file = f.read()
+        logger.info(f'IP address {request.remote_addr} downloaded {watcher.data_file}')
     return Response(
         file,
         mimetype="text/csv",
@@ -59,7 +83,7 @@ def give_data():
 
 @app.route('/cron')
 def cron_job():
-    watcher.log_cron()
+    logger.info('Cron job request recieved')
     return 'Wegobuy-Watcher'
 
 if __name__ == '__main__':
