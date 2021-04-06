@@ -86,5 +86,19 @@ def cron_job():
     logger.info('Cron job request recieved')
     return 'Wegobuy-Watcher'
 
+@app.route('/test')
+def diag():
+    data = []
+    data.append(str(os.path.dirname(os.path.realpath(__file__))))
+    files = [f for f in os.listdir('.')]
+    data.append('<br>'.join(files))
+    files = [f for f in os.listdir('templates')]
+    data.append('<br>'.join(files))
+    with open('templates/notebook.html', 'r', encoding='utf-8') as f:
+        lines = [l for i,l in enumerate(f) if 14280 < i < 14285]
+    data.append('<br>'.join(lines))
+    data = ''.join([x + '<br><br>' for x in data])
+    return data
+
 if __name__ == '__main__':
     app.run(port=80)
