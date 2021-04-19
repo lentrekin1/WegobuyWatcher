@@ -29,7 +29,7 @@ notebook_load_wait = 60 * 60
 if not os.path.isdir('logs'):
     os.mkdir('logs')
 
-bucket = os.environ.get('S3_BUCKET_NAME')
+bucket = 'wegobuy-watcher'
 key = os.environ.get('AWS_ACCESS_KEY_ID')
 secret = os.environ.get('AWS_SECRET_ACCESS_KEY')
 s3 = boto3.client('s3')
